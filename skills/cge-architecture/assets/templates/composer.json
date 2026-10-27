@@ -1,0 +1,14 @@
+{
+  "name": "cge/modulo-satelite",
+  "description": "Módulo Satélite CGE / SAGE en Clean Architecture",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=7.3 <7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}

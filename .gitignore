@@ -1,0 +1,19 @@
+# Environment and local secrets
+.env
+*.local
+*.env.local
+
+# Logs and temporary files
+*.log
+tmp/
+scratch/
+.cache/
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
