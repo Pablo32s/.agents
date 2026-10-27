@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\Security;
 
 /**
  * Servicio de cifrado y ofuscación de IDs y parámetros GET.
  * Previene ataques IDOR y exposición de PII en URLs.
- * Compatible con PHP 7.3.
+ * Modernizado para PHP 8.x.
  */
-class Crypto
+final class Crypto
 {
     private const CIPHER_METHOD = 'aes-128-cbc';
 
@@ -28,7 +30,7 @@ class Crypto
      */
     public static function encryptId(int $id): string
     {
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length(self::CIPHER_METHOD));
+        $iv = random_bytes(openssl_cipher_iv_length(self::CIPHER_METHOD));
         $encrypted = openssl_encrypt((string)$id, self::CIPHER_METHOD, self::getKey(), 0, $iv);
         return rtrim(strtr(base64_encode($iv . $encrypted), '+/', '-_'), '=');
     }
@@ -61,8 +63,8 @@ class Crypto
      */
     public static function encryptQuery(array $params): string
     {
-        $json = json_encode($params);
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length(self::CIPHER_METHOD));
+        $json = json_encode($params, JSON_THROW_ON_ERROR);
+        $iv = random_bytes(openssl_cipher_iv_length(self::CIPHER_METHOD));
         $encrypted = openssl_encrypt($json, self::CIPHER_METHOD, self::getKey(), 0, $iv);
         return rtrim(strtr(base64_encode($iv . $encrypted), '+/', '-_'), '=');
     }
@@ -86,7 +88,11 @@ class Crypto
             return [];
         }
 
-        $decoded = json_decode($decrypted, true);
-        return is_array($decoded) ? $decoded : [];
+        try {
+            $decoded = json_decode($decrypted, true, 512, JSON_THROW_ON_ERROR);
+            return is_array($decoded) ? $decoded : [];
+        } catch (\JsonException $e) {
+            return [];
+        }
     }
 }

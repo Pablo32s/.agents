@@ -1,17 +1,17 @@
 ---
 name: cge-architecture
-description: "Trigger: cge, sage, cge-architecture, php cge, liquidaciones, gestion-alumnos, proyecto-cge, nuevo modulo cge, /mnt/servidor_sage_desarrollo, /mnt/servidor_sage_produccion, local_sage_desarrollo. Standard Clean Architecture for CGE/SAGE systems in PHP 7.3 with modular feature packs."
+description: "Trigger: cge, sage, cge-architecture, php cge, liquidaciones, gestion-alumnos, proyecto-cge, nuevo modulo cge, /mnt/servidor_sage_desarrollo, /mnt/servidor_sage_produccion, local_sage_desarrollo. Standard Clean Architecture for CGE/SAGE systems in modern PHP (8.x / 8.5) with modular feature packs."
 license: Apache-2.0
 metadata:
   author: pabloponce
-  version: "2.0"
+  version: "3.0"
 ---
 
 ## Activation Contract
 
 Use this skill when:
 - Creating, modifying, or refactoring modules in the CGE / SAGE ecosystem.
-- Building PHP 7.3 Clean Architecture applications with Vanilla JS frontend.
+- Building modern PHP (8.x / 8.5) Clean Architecture applications with Vanilla JS frontend.
 - Implementing SAGE dynamic authorization, database bridges, unified error pages, ID obfuscation, or optional feature packs.
 - The active workspace or conversation touches `/mnt/servidor_sage_desarrollo/`, `/mnt/servidor_sage_produccion/`, or `~/local_sage_desarrollo/`.
 
@@ -34,9 +34,14 @@ If the conversation or workspace is opened inside `/mnt/servidor_sage_desarrollo
 
 ## Core Invariable Rules (Always Active)
 
-1. **PHP 7.3 Strict POO & PSR-4**:
-   - 100% PHP 7.3 compatible. NO typed properties (`private int $var`), NO union types, NO `match`. Use PHPDoc comments.
-   - Declare `declare(strict_types=1);` in all PHP files. Follow PSR-4 and 100% SOLID.
+1. **Modern PHP (8.x / 8.5) Strict POO & PSR-4 (MANDATORY)**:
+   - 100% Modern PHP standard (target runtime 8.3/8.5).
+   - **Strict Typing Everywhere**: Declare `declare(strict_types=1);` in all PHP files. Follow PSR-4 and 100% SOLID.
+   - **Typed Properties & Constructor Promotion**: Use native typed properties (`private int $id;`) and constructor property promotion for Value Objects and DTOs (`public function __construct(public readonly string $id) {}`).
+   - **Readonly Classes & Properties**: Mark immutable entities and DTOs as `readonly` to enforce state immutability.
+   - **Match Expressions**: Replace verbose `switch` statements with concise, type-safe `match` expressions.
+   - **Nullsafe Operator (`?->`)**: Safely navigate optional object graphs without nested ternary checks.
+   - **No Dynamic Properties**: Dynamic property creation is deprecated/forbidden in PHP 8.2+. All properties must be declared explicitly.
 2. **Exclusive Frontend Standards — custom-ui (MANDATORY)**:
    - ALL frontend UI/UX development MUST EXCLUSIVELY use the `custom-ui` skill. NO OTHER UI framework, library, or arbitrary CSS style is permitted.
    - Pure Vanilla JavaScript with zero monoliths: split into ES modules (`public/assets/js/modules/`) or native Web Components (`customElements.define`) with Shadow DOM.
@@ -63,7 +68,7 @@ If the conversation or workspace is opened inside `/mnt/servidor_sage_desarrollo
 7. **Date Handling Standard (Anti-MDY / SQL Server Invariant)**:
    - SAGE SQL Server default collation runs in `us_english` with `DateFormat = mdy`.
    - NEVER pass localized date strings (`d/m/Y`) to SQL queries.
-   - All PHP 7.3 DTOs and Repositories MUST format dates in canonical ISO-8601 (`Y-m-d` or `Y-m-d H:i:s`) or use explicit SQL style 120 (`CONVERT(datetime, :fecha, 120)`). Use `DateTimeImmutable` or Date ValueObjects to guarantee zero date-swapping.
+   - All PHP 8.x DTOs and Repositories MUST format dates in canonical ISO-8601 (`Y-m-d` or `Y-m-d H:i:s`) or use explicit SQL style 120 (`CONVERT(datetime, :fecha, 120)`). Use `DateTimeImmutable` or Date ValueObjects to guarantee zero date-swapping.
 8. **Local Development, Git Control & Server Sync Protocol (Zero-Lag Workflow)**:
    - **Local Workspace**: All module coding, indexing, Git commits, and tests MUST run locally inside `~/local_sage_desarrollo/<modulo>/`. NEVER edit directly on `/mnt/servidor_sage_desarrollo` (CIFS over VPN creates severe I/O lag and stalls editors/agents).
    - **Git Branching Strategy**: Every local module MUST be versioned with Git on a dedicated working branch `desarrollo-local` (branched from `desarrollo`). This branch is used by the orchestrator to track `git diff` and control all changes (whether direct surgical edits or delegated bulk worker tasks). The PR is subsequently created against or merged into `desarrollo`.
@@ -100,9 +105,10 @@ All agents, orchestrators, OpenCode workers, and models MUST EXCLUSIVELY use the
 | Operation | Command & Aliases | Purpose & Enforcement |
 |---|---|---|
 | **File Reading** | `readfile <target_file> [start] [end]`<br>*(Aliases: `cge-read`, `cge_read`)* | Reads entire files or exact line ranges without individual permission prompts. Raw `cat`, `head`, `sed` are forbidden. |
-| **PHP Syntax Linter** | `cge-lint <target_file>`<br>*(Aliases: `phplint`, `cge_lint`)* | Validates PHP 7.3 syntax without individual prompts. Mandatory check after EVERY PHP file modification. |
+| **PHP Syntax Linter** | `cge-lint <target_file>`<br>*(Aliases: `phplint`, `cge_lint`)* | Validates modern PHP (8.x) syntax without individual prompts. Mandatory check after EVERY PHP file modification. |
 | **Git Operations** | `cge-git <modulo> <args...>`<br>*(Alias: `cge_git`)* | Git operations targeting the local module cleanly without dynamic `-C` paths. Raw `git -C /path/...` is forbidden. |
 | **Server Sync** | `cge-sync pull <modulo>` *(Aliases: `cge-pull`, `cge_pull`)*<br>`cge-sync push <modulo>` *(Aliases: `cge-push`, `cge_push`, `cge-sync`)* | Safe bidirectional rsync between local workspace and Samba server. Raw `rsync` or direct edits in `/mnt/` are forbidden. |
+| **Skills Sync** | `sync-skills check`<br>`sync-skills pull`<br>`sync-skills push [msg]` | Sincroniza `.agents` entre equipos (notebook, PC, VM). Chequeo obligatorio antes de editar skills. |
 | **File Writing** | `writefile <target_file> <source>`<br>`cat << 'EOF' \| writefile <target>` | Atomic file write/copy without shell escaping or string truncation. |
 | **Python Scratch** | `pyexec <script.py>`<br>*(Alias: `pyrun`)* | Executes scratch data-processing or migration scripts without path permissions. Raw `python3 <path>` is forbidden. |
 | **AST & Symbol Graph** | `cbm <subcommand>`<br>*(CLI: `cbm arch`, `cbm search`, `cbm outline`)* | Ultra-fast codebase exploration via `codebase-memory-mcp` without token inflation. |

@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Config;
 
 use PDO;
 
 /**
- * Bridge Pattern para conexión a base de datos.
- * Compatible con PHP 7.3.
+ * Bridge Pattern para conexión a base de datos SAGE / CGE.
+ * Modernizado para PHP 8.x.
  */
-class DB
+final class DB
 {
-    /** @var PDO|null */
-    private static $conn = null;
+    private static ?PDO $conn = null;
 
     public static function init(): void
     {
@@ -27,13 +28,21 @@ class DB
             require_once $legacyPath;
             self::$conn = $database;
         } else {
-            // Standalone / Local fallback
-            $host = getenv('DB_HOST') ?: 'localhost';
+            // Standalone / Local fallback (SAGE development standard)
+            $driver = getenv('DB_DRIVER') ?: 'dblib';
+            $host   = getenv('DB_HOST') ?: 'localhost';
             $dbname = getenv('DB_NAME') ?: '';
-            $user = getenv('DB_USER') ?: '';
-            $pass = getenv('DB_PASS') ?: '';
-            self::$conn = new PDO("mysql:host={$host};dbname={$dbname};charset=utf8mb4", $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            $user   = getenv('DB_USER') ?: '';
+            $pass   = getenv('DB_PASS') ?: '';
+
+            $dsn = match ($driver) {
+                'sqlsrv' => "sqlsrv:Server={$host};Database={$dbname}",
+                'mysql'  => "mysql:host={$host};dbname={$dbname};charset=utf8mb4",
+                default  => "dblib:host={$host};dbname={$dbname};charset=UTF-8",
+            };
+
+            self::$conn = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
         }

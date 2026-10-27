@@ -1,29 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\ValueObject;
 
 /**
  * Value Object para encapsular permisos SAGE de vw_UsuariosRolesPermisos.
  * Soporta roles múltiples, granularidad (CRUD) y bypass de administradores.
- * Compatible con PHP 7.3.
+ * Modernizado para PHP 8.x.
  */
-class Role
+final readonly class Role
 {
-    /** @var array */
-    private $permissions;
-
-    /** @var array */
-    private $assignedRoles;
-
-    /** @var bool */
-    private $isAdmin;
-
-    public function __construct(array $permissions, array $assignedRoles = [], bool $isAdmin = false)
-    {
-        $this->permissions = $permissions;
-        $this->assignedRoles = $assignedRoles;
-        $this->isAdmin = $isAdmin;
-    }
+    public function __construct(
+        public array $permissions,
+        public array $assignedRoles = [],
+        public bool $isAdmin = false,
+    ) {}
 
     /**
      * Factoría para crear un rol de Administrador con acceso total (roles 55, 75).
@@ -36,16 +28,6 @@ class Role
             'modificar' => 1,
             'eliminar'  => 1,
         ], $adminRoles, true);
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->isAdmin;
-    }
-
-    public function getAssignedRoles(): array
-    {
-        return $this->assignedRoles;
     }
 
     public function canConsult(): bool

@@ -8,14 +8,13 @@ namespace App\Core;
  * Daily rotating file logger with automatic 10-day retention.
  * Writes technical context (stack trace, SQL, file, line, payload) to logs/error-YYYY-MM-DD.log
  * and logs/app-YYYY-MM-DD.log while keeping frontend messages clean for end users.
- * Compatible with PHP 7.3.
+ * Modernizado para PHP 8.x.
  */
-class Logger
+final class Logger
 {
     private const RETENTION_DAYS = 10;
 
-    /** @var string */
-    private $logDir;
+    private readonly string $logDir;
 
     public function __construct(?string $logDir = null)
     {

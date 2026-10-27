@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\Security;
 
 use App\Config\DB;
@@ -9,22 +11,17 @@ use Exception;
 /**
  * Servicio estándar de autorización y seguridad dinámica SAGE.
  * Valida grupos de Super Usuarios (55, 75) y roles específicos contra vw_UsuariosRolesPermisos.
- * Compatible con PHP 7.3.
+ * Modernizado para PHP 8.x.
  */
-class AuthorizationService
+final class AuthorizationService
 {
-    /** @var PDO */
-    private $db;
-
-    /** @var int */
-    private $requiredRole;
-
-    /** @var array */
-    private $superUserGroups;
+    private readonly PDO $db;
+    private readonly int $requiredRole;
+    private readonly array $superUserGroups;
 
     public function __construct(?PDO $db = null)
     {
-        $this->db = $db ?: DB::getConnection();
+        $this->db = $db ?? DB::getConnection();
 
         // Rol requerido para este módulo específico
         $this->requiredRole = (int)(getenv('REQUIRED_ROLE_ID') ?: (getenv('AUTH_REQUIRED_ROL_ID') ?: 0));

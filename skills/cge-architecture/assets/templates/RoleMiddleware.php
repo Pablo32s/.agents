@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core\Middleware;
 
 use App\Core\Security\AuthorizationService;
@@ -9,16 +11,15 @@ use Exception;
 /**
  * Middleware para validación dinámica de roles SAGE contra vw_UsuariosRolesPermisos.
  * Integra AuthorizationService (Super Usuarios 55, 75 y rol requerido).
- * Compatible con PHP 7.3.
+ * Modernizado para PHP 8.x.
  */
-class RoleMiddleware
+final class RoleMiddleware
 {
     /**
      * Valida permisos contra SAGE y retorna el objeto Role.
      * Termina con JSON de error si no está autorizado.
      *
      * @param string $action Acción solicitada (ej: 'list', 'create', 'update', 'delete')
-     * @return Role
      */
     public static function authorize(string $action): Role
     {
@@ -55,7 +56,7 @@ class RoleMiddleware
             return $role;
 
         } catch (Exception $e) {
-            $code = $e->getCode() >= 400 && $e->getCode() <= 500 ? $e->getCode() : 403;
+            $code = $e->getCode() >= 400 && $e->getCode() <= 500 ? (int)$e->getCode() : 403;
             self::respondError($code, $e->getMessage());
         }
     }
@@ -68,7 +69,7 @@ class RoleMiddleware
             'status'  => 'error',
             'code'    => $code,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

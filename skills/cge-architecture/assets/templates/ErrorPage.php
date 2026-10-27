@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Ui\Http;
 
 /**
  * Clase unificada para el renderizado de pantallas de error.
- * Compatible con PHP 7.3 y Material Design 3.
+ * Modernizado para PHP 8.x y Material Design 3.
  */
-class ErrorPage
+final class ErrorPage
 {
     /**
      * Renderiza una pantalla de error autocompletada y detiene la ejecución.
@@ -21,7 +23,7 @@ class ErrorPage
             http_response_code($code);
         }
 
-        $defaultConfig = [
+        $config = match ($code) {
             401 => [
                 'title'   => '401 - No Autorizado',
                 'message' => 'Sesión Expirada o Inválida',
@@ -37,14 +39,12 @@ class ErrorPage
                 'message' => 'Página no Encontrada',
                 'details' => 'El recurso o sección solicitado no existe en esta versión del módulo.'
             ],
-            500 => [
+            default => [
                 'title'   => '500 - Error Interno',
                 'message' => 'Error del Servidor',
                 'details' => 'Ocurrió un problema inesperado al procesar tu solicitud. El equipo técnico ha sido notificado.'
-            ]
-        ];
-
-        $config = $defaultConfig[$code] ?? $defaultConfig[500];
+            ],
+        };
 
         $displayTitle   = htmlspecialchars($config['title']);
         $displayMessage = htmlspecialchars($message !== '' ? $message : $config['message']);
