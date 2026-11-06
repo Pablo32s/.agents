@@ -11,7 +11,7 @@ use Exception;
 /**
  * Middleware para validación dinámica de roles SAGE contra vw_UsuariosRolesPermisos.
  * Integra AuthorizationService (Super Usuarios 55, 75 y rol requerido).
- * Modernizado para PHP 8.x.
+ * Estándar PHP 8.5.
  */
 final class RoleMiddleware
 {

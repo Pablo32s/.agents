@@ -3,7 +3,7 @@
 /**
  * Punto de entrada visual del módulo (UI Web).
  * Aplica Gatekeeper de acceso antes de renderizar cualquier vista.
- * Compatible con PHP 7.3.
+ * Estándar PHP 8.5.
  */
 
 declare(strict_types=1);

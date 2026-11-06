@@ -1,6 +1,6 @@
 # Guía de Generación de Archivos PDF (SAGE / CGE)
 
-Este documento establece el estándar para la generación de archivos PDF en sistemas SAGE / CGE, garantizando coherencia visual y técnica en PHP 7.3.
+Este documento establece el estándar para la generación de archivos PDF en sistemas SAGE / CGE, garantizando coherencia visual y técnica en PHP 8.5.
 
 ## 1. Regla Arquitectónica: Wrapper `TCPDFGenerator`
 

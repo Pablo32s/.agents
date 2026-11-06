@@ -1,17 +1,17 @@
 ---
 name: cge-architecture
-description: "Trigger: cge, sage, cge-architecture, php cge, liquidaciones, gestion-alumnos, proyecto-cge, nuevo modulo cge, /mnt/servidor_sage_desarrollo, /mnt/servidor_sage_produccion, local_sage_desarrollo. Standard Clean Architecture for CGE/SAGE systems in modern PHP (8.x / 8.5) with modular feature packs."
+description: "Trigger: cge, sage, cge-architecture, php cge, liquidaciones, gestion-alumnos, proyecto-cge, nuevo modulo cge, /mnt/servidor_sage_desarrollo, /mnt/servidor_sage_produccion, local_sage_desarrollo. Standard Clean Architecture for CGE/SAGE systems in PHP 8.5 with modular feature packs."
 license: Apache-2.0
 metadata:
   author: pabloponce
-  version: "3.0"
+  version: "3.5"
 ---
 
 ## Activation Contract
 
 Use this skill when:
 - Creating, modifying, or refactoring modules in the CGE / SAGE ecosystem.
-- Building modern PHP (8.x / 8.5) Clean Architecture applications with Vanilla JS frontend.
+- Building PHP 8.5 Clean Architecture applications with Vanilla JS frontend.
 - Implementing SAGE dynamic authorization, database bridges, unified error pages, ID obfuscation, or optional feature packs.
 - The active workspace or conversation touches `/mnt/servidor_sage_desarrollo/`, `/mnt/servidor_sage_produccion/`, or `~/local_sage_desarrollo/`.
 
@@ -24,24 +24,29 @@ If the conversation or workspace is opened inside `/mnt/servidor_sage_desarrollo
    cge-sync pull <modulo>
    ```
    *(Alias: `cge-pull <modulo>`). This copies the module via rsync, initializes Git if absent, creates the `desarrollo` base branch, and switches to the dedicated `desarrollo-local` branch. DO NOT run raw `rsync` directly; running `cge-sync` ensures permission approval is granted once by the user and reused across all repositories.*
-4. Perform ALL operations (exploration, coding, git, tests) exclusively inside `~/local_sage_desarrollo/<modulo>/` on branch `desarrollo-local`.
-   - **Exploration & Navigation**: Use `codebase-memory-mcp` (or CLI `cbm`) to explore architecture, dependencies, and symbols without reading full files. Use `readfile` (or native file viewer) for precise line inspections.
+4. **Mandatory Knowledge Graph Indexing (`cbm index`)**: IMMEDIATELY after pulling or opening a module — and BEFORE any code exploration, search, or modification — execute:
+   ```bash
+   cbm index <modulo>
+   ```
+   You MUST ALSO re-run `cbm index <modulo>` after creating, deleting, renaming, or refactoring files/classes so the AST Knowledge Graph stays 100% synchronized at all times.
+5. Perform ALL operations (exploration, coding, git, tests) exclusively inside `~/local_sage_desarrollo/<modulo>/` on branch `desarrollo-local`.
+   - **Exploration & Navigation (Graph-First)**: Always ensure `cbm index <modulo>` is up to date first, then use `cbm` (`cbm arch <modulo>`, `cbm status <modulo>`) or `codebase-memory-mcp` tools to explore architecture, dependencies, and symbols without reading full files. Use `readfile` (or native file viewer) for precise line inspections.
    - **Direct Surgical Editing**: Apply targeted changes and refactoring directly using native tools (`replace_file_content`, `write_to_file`) or `writefile`. DO NOT delegate single-file surgical fixes to a worker model (avoids double-work and token waste).
-   - **Syntax Validation**: Immediately verify edited files with `cge-lint <target_file>` (or `phplint <target_file>`).
-5. **Quality Control & Git Audit**: As orchestrator, audit changes via `git status` and `cge-git <modulo> diff` (or `git diff desarrollo`) on `desarrollo-local`. Reserve `opencode-worker` strictly for bulk mechanical changes across multiple files.
-6. Run `cge-sync push <modulo>` (or `cge-sync <modulo>`) to push changes back to `/mnt/servidor_sage_desarrollo/<modulo>/`.
-7. When preparing the PR, target the pull request against the `desarrollo` branch.
+   - **Syntax Validation & Re-Indexing**: Immediately verify edited files with `cge-lint <target_file>` (or `phplint <target_file>`) and run `cbm index <modulo>` after structural changes.
+6. **Quality Control & Git Audit**: As orchestrator, audit changes via `git status` and `cge-git <modulo> diff` (or `git diff desarrollo`) on `desarrollo-local`. Reserve `opencode-worker` strictly for bulk mechanical changes across multiple files.
+7. Run `cge-sync push <modulo>` (or `cge-sync <modulo>`) to push changes back to `/mnt/servidor_sage_desarrollo/<modulo>/`.
+8. When preparing the PR, target the pull request against the `desarrollo` branch.
 
 ## Core Invariable Rules (Always Active)
 
-1. **Modern PHP (8.x / 8.5) Strict POO & PSR-4 (MANDATORY)**:
-   - 100% Modern PHP standard (target runtime 8.3/8.5).
+1. **Modern PHP 8.5 Strict POO & PSR-4 (MANDATORY)**:
+   - 100% Modern PHP 8.5 standard (target server runtime: PHP 8.5). Zero legacy PHP 7.x compatibility shims.
    - **Strict Typing Everywhere**: Declare `declare(strict_types=1);` in all PHP files. Follow PSR-4 and 100% SOLID.
-   - **Typed Properties & Constructor Promotion**: Use native typed properties (`private int $id;`) and constructor property promotion for Value Objects and DTOs (`public function __construct(public readonly string $id) {}`).
-   - **Readonly Classes & Properties**: Mark immutable entities and DTOs as `readonly` to enforce state immutability.
-   - **Match Expressions**: Replace verbose `switch` statements with concise, type-safe `match` expressions.
-   - **Nullsafe Operator (`?->`)**: Safely navigate optional object graphs without nested ternary checks.
-   - **No Dynamic Properties**: Dynamic property creation is deprecated/forbidden in PHP 8.2+. All properties must be declared explicitly.
+   - **Typed Properties, Constants & Constructor Promotion**: Use native typed properties (`private int $id;`), typed class constants (`private const int RETENTION_DAYS = 10;`), and constructor property promotion for Value Objects and DTOs (`public function __construct(public readonly string $id) {}`).
+   - **Readonly Classes, Asymmetric Visibility & Property Hooks**: Mark immutable entities and DTOs as `readonly` (`final readonly class`), or use asymmetric visibility (`public private(set) string $status`) and property hooks where controlled mutation is required.
+   - **PHP 8.5 Native Idioms**: Leverage the pipe operator (`|>`), `clone($obj, ['prop' => $val])` for immutable state updates, `#[Override]` attribute on interface/parent implementations, `#[NoDiscard]` where return values are critical, and native array helpers (`array_first()`, `array_last()`, `str_contains()`, `str_starts_with()`, `str_ends_with()`).
+   - **Enums, Match & Nullsafe (`?->`)**: Use backed `enum` for domain states/actions, `match` expressions instead of `switch`, and `?->` for optional object graphs.
+   - **No Dynamic Properties**: Forbidden. All properties must be declared explicitly with strict types.
 2. **Exclusive Frontend Standards — custom-ui (MANDATORY)**:
    - ALL frontend UI/UX development MUST EXCLUSIVELY use the `custom-ui` skill. NO OTHER UI framework, library, or arbitrary CSS style is permitted.
    - Pure Vanilla JavaScript with zero monoliths: split into ES modules (`public/assets/js/modules/`) or native Web Components (`customElements.define`) with Shadow DOM.
@@ -68,9 +73,10 @@ If the conversation or workspace is opened inside `/mnt/servidor_sage_desarrollo
 7. **Date Handling Standard (Anti-MDY / SQL Server Invariant)**:
    - SAGE SQL Server default collation runs in `us_english` with `DateFormat = mdy`.
    - NEVER pass localized date strings (`d/m/Y`) to SQL queries.
-   - All PHP 8.x DTOs and Repositories MUST format dates in canonical ISO-8601 (`Y-m-d` or `Y-m-d H:i:s`) or use explicit SQL style 120 (`CONVERT(datetime, :fecha, 120)`). Use `DateTimeImmutable` or Date ValueObjects to guarantee zero date-swapping.
-8. **Local Development, Git Control & Server Sync Protocol (Zero-Lag Workflow)**:
+   - All PHP 8.5 DTOs and Repositories MUST format dates in canonical ISO-8601 (`Y-m-d` or `Y-m-d H:i:s`) or use explicit SQL style 120 (`CONVERT(datetime, :fecha, 120)`). Use `DateTimeImmutable` or Date ValueObjects to guarantee zero date-swapping.
+8. **Local Development, CBM Indexing, Git Control & Server Sync Protocol (Zero-Lag Workflow)**:
    - **Local Workspace**: All module coding, indexing, Git commits, and tests MUST run locally inside `~/local_sage_desarrollo/<modulo>/`. NEVER edit directly on `/mnt/servidor_sage_desarrollo` (CIFS over VPN creates severe I/O lag and stalls editors/agents).
+   - **Mandatory Always-On Indexing (`cbm index <modulo>`)**: It is STRICTLY MANDATORY to run `cbm index <modulo>` at the start of work on any module (right after `cge-sync pull <modulo>`) and after any structural change (new/renamed/deleted classes, methods, or files). Never explore a module with `grep` or full-file reads without indexing it in `codebase-memory-mcp` first.
    - **Git Branching Strategy**: Every local module MUST be versioned with Git on a dedicated working branch `desarrollo-local` (branched from `desarrollo`). This branch is used by the orchestrator to track `git diff` and control all changes (whether direct surgical edits or delegated bulk worker tasks). The PR is subsequently created against or merged into `desarrollo`.
    - **No Raw Rsync - Use `cge-sync` / Aliases**: NEVER execute raw `rsync` commands directly. Always use `cge-sync pull <modulo>` (or `cge-pull`) to pull from server and initialize `desarrollo-local`, and `cge-sync push <modulo>` (or `cge-sync <modulo>`) to sync back to Samba. This allows the user to approve the command once in the IDE UI and reuse permissions.
    - **Automated Sync Authorization**: The assistant/agent is explicitly authorized and expected to execute `cge-sync push` (or `cge-sync <modulo>`) after each batch of code changes or refactorings.
@@ -105,13 +111,13 @@ All agents, orchestrators, OpenCode workers, and models MUST EXCLUSIVELY use the
 | Operation | Command & Aliases | Purpose & Enforcement |
 |---|---|---|
 | **File Reading** | `readfile <target_file> [start] [end]`<br>*(Aliases: `cge-read`, `cge_read`)* | Reads entire files or exact line ranges without individual permission prompts. Raw `cat`, `head`, `sed` are forbidden. |
-| **PHP Syntax Linter** | `cge-lint <target_file>`<br>*(Aliases: `phplint`, `cge_lint`)* | Validates modern PHP (8.x) syntax without individual prompts. Mandatory check after EVERY PHP file modification. |
+| **PHP Syntax Linter** | `cge-lint <target_file>`<br>*(Aliases: `phplint`, `cge_lint`)* | Validates PHP 8.5 syntax without individual prompts. Mandatory check after EVERY PHP file modification. |
 | **Git Operations** | `cge-git <modulo> <args...>`<br>*(Alias: `cge_git`)* | Git operations targeting the local module cleanly without dynamic `-C` paths. Raw `git -C /path/...` is forbidden. |
 | **Server Sync** | `cge-sync pull <modulo>` *(Aliases: `cge-pull`, `cge_pull`)*<br>`cge-sync push <modulo>` *(Aliases: `cge-push`, `cge_push`, `cge-sync`)* | Safe bidirectional rsync between local workspace and Samba server. Raw `rsync` or direct edits in `/mnt/` are forbidden. |
 | **Skills Sync** | `sync-skills check`<br>`sync-skills pull`<br>`sync-skills push [msg]` | Sincroniza `.agents` entre equipos (notebook, PC, VM). Chequeo obligatorio antes de editar skills. |
 | **File Writing** | `writefile <target_file> <source>`<br>`cat << 'EOF' \| writefile <target>` | Atomic file write/copy without shell escaping or string truncation. |
 | **Python Scratch** | `pyexec <script.py>`<br>*(Alias: `pyrun`)* | Executes scratch data-processing or migration scripts without path permissions. Raw `python3 <path>` is forbidden. |
-| **AST & Symbol Graph** | `cbm <subcommand>`<br>*(CLI: `cbm arch`, `cbm search`, `cbm outline`)* | Ultra-fast codebase exploration via `codebase-memory-mcp` without token inflation. |
+| **AST & Symbol Graph** | `cbm index <modulo>`<br>`cbm <subcommand>` *(CLI: `cbm arch`, `cbm status`, `cbm list`)* | **MANDATORY**: Run `cbm index <modulo>` before exploring any module and after structural edits to keep the AST graph 100% indexed at all times. |
 | **Mechanical Worker** | `worker <target_file> <contract>` | Ollama local worker for bulk multi-file mechanical boilerplate only. |
 | **Local API & DB Test** | `cge-test <modulo> <action> [payload]`<br>*(Aliases: `cge_test`)* | Tests API endpoints, validates SQL Server development DB (`--check-db`) and SAGE permissions (`--check-auth`) without Apache or curl. |
 

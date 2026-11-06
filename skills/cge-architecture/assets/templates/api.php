@@ -3,7 +3,7 @@
 /**
  * Front Controller único para la API CGE / SAGE.
  * Registra diagnósticos técnicos en logs diarios (10 días de retención) y devuelve mensajes amigables al usuario.
- * Compatible con PHP 7.3.
+ * Estándar PHP 8.5.
  */
 
 declare(strict_types=1);

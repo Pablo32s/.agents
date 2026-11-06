@@ -6,7 +6,7 @@ namespace App\Infrastructure\Ui\Http;
 
 /**
  * Clase unificada para el renderizado de pantallas de error.
- * Modernizado para PHP 8.x y Material Design 3.
+ * Estándar PHP 8.5 y Material Design 3.
  */
 final class ErrorPage
 {

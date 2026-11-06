@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -e
+
+AGENTS_DIR="${HOME}/.agents"
+
+if [ ! -d "${AGENTS_DIR}/.git" ]; then
+    echo "❌ Error: ${AGENTS_DIR} no es un repositorio Git."
+    exit 1
+fi
+
+ACTION="${1:-pull}"
+
+case "$ACTION" in
+    check|status)
+        echo "🔍 Verificando estado de skills en ${AGENTS_DIR}..."
+        git -C "${AGENTS_DIR}" fetch origin main --quiet
+        LOCAL=$(git -C "${AGENTS_DIR}" rev-parse @)
+        REMOTE=$(git -C "${AGENTS_DIR}" rev-parse @{u} 2>/dev/null || echo "$LOCAL")
+        BASE=$(git -C "${AGENTS_DIR}" merge-base @ @{u} 2>/dev/null || echo "$LOCAL")
+
+        if [ "$LOCAL" = "$REMOTE" ]; then
+            echo "✅ Skills actualizados al día con origin/main."
+        elif [ "$LOCAL" = "$BASE" ]; then
+            echo "⚠️ Hay actualizaciones pendientes en origin/main. Ejecutá: sync-skills pull"
+            exit 2
+        elif [ "$REMOTE" = "$BASE" ]; then
+            echo "ℹ️ Tenés cambios locales no pusheados en ${AGENTS_DIR}. Ejecutá: sync-skills push"
+        else
+            echo "⚠️ Divergencia detectada entre local y remoto."
+        fi
+        git -C "${AGENTS_DIR}" status -s
+        ;;
+
+    pull|sync)
+        echo "🔄 Actualizando skills desde origin/main..."
+        git -C "${AGENTS_DIR}" pull --rebase origin main
+        echo "✅ Skills sincronizados exitosamente."
+        ;;
+
+    push)
+        MSG="${2:-docs: sync skills updates}"
+        echo "🚀 Enviando cambios de skills a origin/main..."
+        git -C "${AGENTS_DIR}" add .
+        if git -C "${AGENTS_DIR}" diff --cached --quiet; then
+            echo "ℹ️ Nada para commitear en ${AGENTS_DIR}."
+        else
+            git -C "${AGENTS_DIR}" commit -m "$MSG"
+        fi
+        git -C "${AGENTS_DIR}" push origin main
+        echo "✅ Cambios subidos a origin/main."
+        ;;
+
+    *)
+        echo "Uso: sync-skills [check|pull|push] [mensaje_commit_opcional]"
+        exit 1
+        ;;
+esac

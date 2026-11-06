@@ -6,9 +6,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/microsoft/azure-skills.git",
       "skillPath": ".github/plugins/azure-skills/skills/microsoft-foundry/SKILL.md",
-      "skillFolderHash": "2311f81bfa096aaefd50068b61443cb92ba70bfe",
+      "skillFolderHash": "15b425217b643229a34baf34eb1def65bb637308",
       "installedAt": "2026-07-21T00:46:17.630Z",
-      "updatedAt": "2026-10-26T23:00:42.098Z"
+      "updatedAt": "2026-10-28T20:05:00.425Z"
     },
     "archify": {
       "source": "tt-a1i/archify",

@@ -1,16 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Storage;
 
 /**
  * Gestor de almacenamiento y ensamblado de documentos (Document Assembly).
  * Combina imágenes y PDFs en un único documento optimizado vía Ghostscript (gs).
- * Compatible con PHP 7.3.
+ * Estándar PHP 8.5.
  */
-class SharedFileStorage
+final readonly class SharedFileStorage
 {
-    /** @var string */
-    private $uploadDir;
+    private string $uploadDir;
 
     public function __construct(string $uploadDir)
     {
@@ -23,7 +24,7 @@ class SharedFileStorage
     /**
      * Ensambla múltiples archivos (PDF o imágenes) en un único PDF final optimizado.
      *
-     * @param array $filePaths Rutas temporales de los archivos subidos.
+     * @param list<string> $filePaths Rutas temporales de los archivos subidos.
      * @param string $outputFilename Nombre deseado para el archivo final.
      * @return string Ruta completa del PDF generado.
      */
@@ -37,15 +38,14 @@ class SharedFileStorage
                 $tempPdfs[] = $path;
             } elseif (in_array($mime, ['image/jpeg', 'image/png', 'image/jpg'], true)) {
                 // Conversión de imagen a PDF temporal usando ImageMagick o TCPDF
-                $pdfFromImg = $this->convertImageToPdf($path);
-                $tempPdfs[] = $pdfFromImg;
+                $tempPdfs[] = $this->convertImageToPdf($path);
             }
         }
 
         $destPath = $this->uploadDir . '/' . $outputFilename;
 
         // Si es solo 1 PDF ya listo, se copia directamente
-        if (count($tempPdfs) === 1 && end($tempPdfs) === $filePaths[0]) {
+        if (count($tempPdfs) === 1 && array_last($tempPdfs) === ($filePaths[0] ?? null)) {
             copy($tempPdfs[0], $destPath);
             return $destPath;
         }

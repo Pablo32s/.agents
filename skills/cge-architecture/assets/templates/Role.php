@@ -7,7 +7,7 @@ namespace App\Core\ValueObject;
 /**
  * Value Object para encapsular permisos SAGE de vw_UsuariosRolesPermisos.
  * Soporta roles múltiples, granularidad (CRUD) y bypass de administradores.
- * Modernizado para PHP 8.x.
+ * Estándar PHP 8.5.
  */
 final readonly class Role
 {

@@ -7,11 +7,11 @@ namespace App\Core\Security;
 /**
  * Servicio de cifrado y ofuscación de IDs y parámetros GET.
  * Previene ataques IDOR y exposición de PII en URLs.
- * Modernizado para PHP 8.x.
+ * Estándar PHP 8.5.
  */
 final class Crypto
 {
-    private const CIPHER_METHOD = 'aes-128-cbc';
+    private const string CIPHER_METHOD = 'aes-128-cbc';
 
     /**
      * Obtiene la clave de cifrado desde el entorno.

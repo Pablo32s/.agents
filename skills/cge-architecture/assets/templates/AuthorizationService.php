@@ -11,7 +11,7 @@ use Exception;
 /**
  * Servicio estándar de autorización y seguridad dinámica SAGE.
  * Valida grupos de Super Usuarios (55, 75) y roles específicos contra vw_UsuariosRolesPermisos.
- * Modernizado para PHP 8.x.
+ * Estándar PHP 8.5.
  */
 final class AuthorizationService
 {

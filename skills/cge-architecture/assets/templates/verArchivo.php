@@ -2,7 +2,7 @@
 
 /**
  * Proxy seguro para entrega de documentación y archivos protegidos.
- * Compatible con PHP 7.3.
+ * Estándar PHP 8.5.
  */
 
 declare(strict_types=1);
@@ -47,9 +47,9 @@ $moduleStorageDir = rtrim($moduleStorageDir, '/');
 
 // Validación estricta: la ruta solicitada debe pertenecer exclusivamente al almacenamiento de este módulo
 $canonicalBase = realpath($moduleStorageDir) ?: $moduleStorageDir;
-$isValidPrefix = (strpos($requestedPath, $moduleStorageDir) === 0 || strpos($requestedPath, $canonicalBase) === 0);
+$isValidPrefix = (str_starts_with($requestedPath, $moduleStorageDir) || str_starts_with($requestedPath, $canonicalBase));
 
-if (!$isValidPrefix || strpos($requestedPath, '..') !== false) {
+if (!$isValidPrefix || str_contains($requestedPath, '..')) {
     ErrorPage::render(403, 'Acceso Denegado', 'Ruta de archivo no autorizada o fuera del módulo.');
 }
 

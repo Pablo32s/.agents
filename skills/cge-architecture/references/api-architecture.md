@@ -1,6 +1,6 @@
 # Arquitectura de Conexión y API — Módulos CGE / SAGE
 
-Este documento describe el patrón de diseño utilizado para la persistencia de datos y la comunicación entre el Frontend (Vanilla JS) y el Backend (PHP 7.3 Puro) de forma 100% modular y desacoplada.
+Este documento describe el patrón de diseño utilizado para la persistencia de datos y la comunicación entre el Frontend (Vanilla JS) y el Backend (PHP 8.5 Puro) de forma 100% modular y desacoplada.
 
 ## 1. Conexión a la Base de Datos (Backend)
 
@@ -15,41 +15,56 @@ La arquitectura utiliza un **Bridge Pattern** para desacoplar el sistema moderno
 2. La clase `App\Config\DB::init()` busca el archivo legacy que contiene la configuración de los fierros (host, dbname, user, pass).
 3. Captura una instancia global de **PDO** (variable `$database`) y la encapsula para su uso en los Repositorios.
 
-### Código de Referencia (PHP 7.3 Compatible)
+### Código de Referencia (PHP 8.5)
 ```php
 <?php
+
+declare(strict_types=1);
+
 namespace App\Config;
 
 use PDO;
 
-class DB {
-    /** @var PDO|null */
-    private static $conn = null;
+final class DB
+{
+    private static ?PDO $conn = null;
 
-    public static function init(): void {
+    public static function init(): void
+    {
         if (self::$conn !== null) {
             return;
         }
+
         global $database;
         $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
         $legacyPath = $docRoot . '/dic/includes/connDB.inc.php';
+
         if (file_exists($legacyPath)) {
             require_once $legacyPath;
             self::$conn = $database;
         } else {
-            // Fallback para entornos de desarrollo / standalone
-            $host = getenv('DB_HOST') ?: 'localhost';
+            // Standalone / Local fallback (SAGE development standard)
+            $driver = getenv('DB_DRIVER') ?: 'dblib';
+            $host   = getenv('DB_HOST') ?: 'localhost';
             $dbname = getenv('DB_NAME') ?: '';
-            $user = getenv('DB_USER') ?: '';
-            $pass = getenv('DB_PASS') ?: '';
-            self::$conn = new PDO("mysql:host={$host};dbname={$dbname};charset=utf8mb4", $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            $user   = getenv('DB_USER') ?: '';
+            $pass   = getenv('DB_PASS') ?: '';
+
+            $dsn = match ($driver) {
+                'sqlsrv' => "sqlsrv:Server={$host};Database={$dbname}",
+                'mysql'  => "mysql:host={$host};dbname={$dbname};charset=utf8mb4",
+                default  => "dblib:host={$host};dbname={$dbname};charset=UTF-8",
+            };
+
+            self::$conn = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
         }
     }
 
-    public static function getConnection(): PDO {
+    public static function getConnection(): PDO
+    {
         if (self::$conn === null) {
             self::init();
         }

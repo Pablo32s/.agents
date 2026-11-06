@@ -8,7 +8,7 @@ use PDO;
 
 /**
  * Bridge Pattern para conexión a base de datos SAGE / CGE.
- * Modernizado para PHP 8.x.
+ * Estándar PHP 8.5.
  */
 final class DB
 {
