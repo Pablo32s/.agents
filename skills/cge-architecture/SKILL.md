@@ -47,9 +47,10 @@ If the conversation or workspace is opened inside `/mnt/servidor_sage_desarrollo
    - **PHP 8.5 Native Idioms**: Leverage the pipe operator (`|>`), `clone($obj, ['prop' => $val])` for immutable state updates, `#[Override]` attribute on interface/parent implementations, `#[NoDiscard]` where return values are critical, and native array helpers (`array_first()`, `array_last()`, `str_contains()`, `str_starts_with()`, `str_ends_with()`).
    - **Enums, Match & Nullsafe (`?->`)**: Use backed `enum` for domain states/actions, `match` expressions instead of `switch`, and `?->` for optional object graphs.
    - **No Dynamic Properties**: Forbidden. All properties must be declared explicitly with strict types.
-2. **Exclusive Frontend Standards — custom-ui (MANDATORY)**:
+2. **Exclusive Frontend Standards — custom-ui & Legacy Browser Compatibility (MANDATORY)**:
    - ALL frontend UI/UX development MUST EXCLUSIVELY use the `custom-ui` skill. NO OTHER UI framework, library, or arbitrary CSS style is permitted.
-   - Pure Vanilla JavaScript with zero monoliths: split into ES modules (`public/assets/js/modules/`) or native Web Components (`customElements.define`) with Shadow DOM.
+   - **Legacy Client Browser Guard (Chrome 85–109 / Win7 / Firefox ESR)**: Target school and office PCs with outdated browsers. Use 100% consolidated Vanilla JS (ES6/ES2020) and classic pure CSS (Flexbox, Grid, `:root` hex/rgba variables). **STRICTLY FORBIDDEN** in frontend code: CSS `:has()`, native CSS nesting, `oklch()`, `color-mix()`, `@container`, `popover` API, CSS Anchor Positioning, `@starting-style`, `Object.groupBy()`, or `Array.prototype.toSorted()`.
+   - Pure Vanilla JavaScript with zero monoliths: split into ES modules (`public/assets/js/modules/`) or native Web Components (`customElements.define`) with Shadow DOM (`<style>` injection).
    - Use `Api.js` Service Layer for all server calls.
    - Design Tokens (:root) in harmonious Blue & Slate tones (`--bg-main: #f0f4f8;`, `--bg-dark-main: #0b1120;`, `--primary-500: #3b82f6;`, etc.). Strictly avoid pure white (`#fff`) or cold gray backgrounds. Clean CSS Grid & Flexbox, micro-animations, standard NameThatUI naming conventions.
 3. **Thin Entry Points & Gatekeeper (MANDATORY)**:

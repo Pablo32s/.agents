@@ -400,7 +400,25 @@ Vistas HTML/PHP vinculadas a `design-tokens.css` y orquestadas con el controlado
 
 ---
 
-## 8. Checklist de Validación Obligatoria
+## 8. Compatibilidad con Parque Informático Desactualizado (Regla Invariante de Navegadores)
+
+> **REALIDAD DE INFRAESTRUCTURA (CGE / ESCUELAS)**: Gran parte de las PCs administrativas y escolares corren sistemas operativos congelados (Windows 7 / Windows 8.1 / Linux antiguos) donde los navegadores quedaron estancados en **Chrome 85–109**, **Edge 109** o **Firefox 78–115 ESR**.
+> Por este motivo utilizamos **100% Vanilla JS (ES6/ES2020 estándar) y CSS puro consolidado**, sin bundlers complejos ni APIs experimentales pos-2022.
+
+### Matriz Estricta de Compatibilidad Frontend (Qué USAR vs. Qué PROHIBIR)
+
+| Categoría | ✅ PERMITIDO Y OBLIGATORIO (100% seguro en PCs viejas) | ❌ TERMINANTEMENTE PROHIBIDO (Rompe Chrome <= 109 / FF ESR) |
+|---|---|---|
+| **Layout y Grillas** | Flexbox (`display: flex; gap`), CSS Grid clásico (`grid-template-columns`), `position: sticky` | CSS Anchor Positioning (`anchor-name`, `position-anchor`), `@container` queries, Subgrid |
+| **Colores y Variables** | Variables CSS en `:root` (`var(--token)`), colores en `hex` (`#0284c7`), `rgb()` y `rgba()` | `oklch()`, `color-mix()`, `light-dark()`, sintaxis de color nivel 4/5 |
+| **Selectores CSS** | Selectores clásicos, `:hover`, `:focus`, `:not()` simple | `:has()` (no existe en Chrome < 105 ni FF < 121), CSS Nesting nativo (`& .child` sin preprocesador) |
+| **Modales y Menús** | `<div class="modal-overlay">` controlado por clase `.active` / `.open` con `z-index` y `position: fixed/absolute` | Popover API (`popover="auto"`), `<dialog>.showModal()` sin fallback, `@starting-style`, `transition-behavior: allow-discrete`, View Transitions API |
+| **Web Components** | `customElements.define()`, `attachShadow({ mode: 'open' })`, inyección de `<style>${sharedStyles}</style>` vía template literal | Declarative Shadow DOM (`<template shadowrootmode="open">`), CSS Module Scripts (`import sheet from './style.css' with { type: 'css' }`) |
+| **JavaScript (ES6+)** | `async/await`, `fetch`, ES Modules (`import`/`export`), `Array.map/filter/reduce`, `Object.entries`, `dataset`, `classList` | `Array.toSorted()`, `Array.toSpliced()`, `Object.groupBy()`, `Promise.withResolvers()`, `Iterator` helpers (fallen en motores V8 pre-2023) |
+
+---
+
+## 9. Checklist de Validación Obligatoria
 
 Antes de dar por finalizada cualquier interfaz o componente:
 - [ ] ¿El cascarón principal está envuelto en `.sage-container` y `.main-card`?
@@ -410,3 +428,4 @@ Antes de dar por finalizada cualquier interfaz o componente:
 - [ ] ¿Las tablas tienen encabezados sticky con fondo `#f8fafc` y hover en filas?
 - [ ] ¿Los botones de acción en tabla usan `.action-btn` estilizados (primary o danger)?
 - [ ] ¿Los inputs tienen focus ring azul suave de 3px sin contorno predeterminado del navegador?
+- [ ] ¿El CSS y JS respetan el límite de compatibilidad para navegadores congelados (CERO `:has()`, CERO CSS Nesting nativo, CERO `popover`, CERO `oklch()`, CERO `.toSorted()`/`.groupBy()`)?
