@@ -10,7 +10,7 @@ use Exception;
 
 /**
  * Middleware para validación dinámica de roles SAGE contra vw_UsuariosRolesPermisos.
- * Integra AuthorizationService (Super Usuarios 55, 75 y rol requerido).
+ * Integra AuthorizationService (Super Usuarios 55, 75 y roles requeridos).
  * Estándar PHP 8.5.
  */
 final class RoleMiddleware
@@ -27,7 +27,11 @@ final class RoleMiddleware
             $authService = new AuthorizationService();
             $permissions = $authService->checkAccess();
 
-            $role = new Role($permissions, [], (bool)($permissions['isSuperUser'] ?? false));
+            $role = new Role(
+                $permissions,
+                [(int)($permissions['rol'] ?? 0)],
+                (bool)($permissions['isSuperUser'] ?? false),
+            );
 
             // Si es Super Usuario (grupos 55, 75), posee bypass total
             if ($role->isAdmin()) {
@@ -35,7 +39,7 @@ final class RoleMiddleware
             }
 
             // Validación granular por acción para usuarios comunes
-            $actionLower = strtolower($action);
+            $actionLower = strtolower(trim($action));
 
             if (in_array($actionLower, ['create', 'add', 'save', 'store', 'insertar'], true) && !$role->canAdd()) {
                 self::respondError(403, 'Permisos insuficientes: tu rol no tiene autorización de ESCRITURA (agregar).');
@@ -49,26 +53,29 @@ final class RoleMiddleware
                 self::respondError(403, 'Permisos insuficientes: tu rol no tiene autorización de ELIMINACIÓN.');
             }
 
-            if (in_array($actionLower, ['list', 'get', 'show', 'status', 'consultar', 'ver'], true) && !$role->canConsult()) {
+            if (in_array($actionLower, ['list', 'get', 'show', 'status', 'consultar', 'ver', 'listar'], true) && !$role->canConsult()) {
                 self::respondError(403, 'Permisos insuficientes: tu rol no tiene autorización de CONSULTA.');
             }
 
             return $role;
-
         } catch (Exception $e) {
-            $code = $e->getCode() >= 400 && $e->getCode() <= 500 ? (int)$e->getCode() : 403;
+            $code = ($e->getCode() >= 400 && $e->getCode() <= 500) ? (int)$e->getCode() : 403;
             self::respondError($code, $e->getMessage());
         }
     }
 
-    private static function respondError(int $code, string $message): void
+    private static function respondError(int $code, string $message): never
     {
-        http_response_code($code);
-        header('Content-Type: application/json; charset=utf-8');
+        if (!headers_sent()) {
+            http_response_code($code);
+            header('Content-Type: application/json; charset=utf-8');
+        }
         echo json_encode([
             'status'  => 'error',
+            'success' => false,
             'code'    => $code,
             'message' => $message,
+            'error'   => $message,
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         exit;
     }

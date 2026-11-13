@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\Security;
 
+use App\Core\Env;
+
 /**
  * Servicio de cifrado y ofuscación de IDs y parámetros GET.
  * Previene ataques IDOR y exposición de PII en URLs.
@@ -18,7 +20,7 @@ final class Crypto
      */
     private static function getKey(): string
     {
-        $key = getenv('APP_KEY') ?: '';
+        $key = Env::get('APP_KEY', '');
         if ($key === '') {
             throw new \RuntimeException('APP_KEY no está configurada en el archivo .env.');
         }
@@ -91,7 +93,7 @@ final class Crypto
         try {
             $decoded = json_decode($decrypted, true, 512, JSON_THROW_ON_ERROR);
             return is_array($decoded) ? $decoded : [];
-        } catch (\JsonException $e) {
+        } catch (\JsonException) {
             return [];
         }
     }

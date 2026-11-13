@@ -11,6 +11,10 @@ namespace App\Core\ValueObject;
  */
 final readonly class Role
 {
+    /**
+     * @param array<string, bool|int|string> $permissions
+     * @param array<int, int> $assignedRoles
+     */
     public function __construct(
         public array $permissions,
         public array $assignedRoles = [],
@@ -18,36 +22,51 @@ final readonly class Role
     ) {}
 
     /**
-     * Factoría para crear un rol de Administrador con acceso total (roles 55, 75).
+     * Factoría para crear un rol de Administrador con acceso total (grupos 55, 75).
+     *
+     * @param array<int, int> $adminRoles
      */
     public static function createAdmin(array $adminRoles = [55, 75]): self
     {
         return new self([
-            'consultar' => 1,
-            'agregar'   => 1,
-            'modificar' => 1,
-            'eliminar'  => 1,
+            'consultar' => true,
+            'agregar'   => true,
+            'modificar' => true,
+            'eliminar'  => true,
         ], $adminRoles, true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->isAdmin;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getAssignedRoles(): array
+    {
+        return $this->assignedRoles;
     }
 
     public function canConsult(): bool
     {
-        return $this->isAdmin || (bool)($this->permissions['consultar'] ?? false);
+        return $this->isAdmin || !empty($this->permissions['consultar']);
     }
 
     public function canAdd(): bool
     {
-        return $this->isAdmin || (bool)($this->permissions['agregar'] ?? false);
+        return $this->isAdmin || !empty($this->permissions['agregar']);
     }
 
     public function canModify(): bool
     {
-        return $this->isAdmin || (bool)($this->permissions['modificar'] ?? false);
+        return $this->isAdmin || !empty($this->permissions['modificar']);
     }
 
     public function canDelete(): bool
     {
-        return $this->isAdmin || (bool)($this->permissions['eliminar'] ?? false);
+        return $this->isAdmin || !empty($this->permissions['eliminar']);
     }
 
     /**

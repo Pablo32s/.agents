@@ -47,7 +47,7 @@ final class Logger
     public function exception(\Throwable $e, array $extraContext = []): string
     {
         $context = array_merge([
-            'exception' => get_class($e),
+            'exception' => $e::class,
             'code'      => $e->getCode(),
             'file'      => $e->getFile(),
             'line'      => $e->getLine(),
@@ -64,7 +64,7 @@ final class Logger
     {
         try {
             $traceId = bin2hex(random_bytes(4));
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $traceId = substr(md5(uniqid('', true)), 0, 8);
         }
 

@@ -15,7 +15,7 @@ La arquitectura utiliza un **Bridge Pattern** para desacoplar el sistema moderno
 2. La clase `App\Config\DB::init()` busca el archivo legacy que contiene la configuración de los fierros (host, dbname, user, pass).
 3. Captura una instancia global de **PDO** (variable `$database`) y la encapsula para su uso en los Repositorios.
 
-### Código de Referencia (PHP 8.5)
+### Código de Referencia (PHP 8.5 + SQL Server)
 ```php
 <?php
 
@@ -23,52 +23,105 @@ declare(strict_types=1);
 
 namespace App\Config;
 
+use App\Core\Env;
 use PDO;
+use RuntimeException;
 
 final class DB
 {
     private static ?PDO $conn = null;
 
-    public static function init(): void
+    public static function init(?string $envPath = null): PDO
     {
         if (self::$conn !== null) {
-            return;
+            return self::$conn;
         }
 
-        global $database;
-        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-        $legacyPath = $docRoot . '/dic/includes/connDB.inc.php';
-
-        if (file_exists($legacyPath)) {
-            require_once $legacyPath;
-            self::$conn = $database;
-        } else {
-            // Standalone / Local fallback (SAGE development standard)
-            $driver = getenv('DB_DRIVER') ?: 'dblib';
-            $host   = getenv('DB_HOST') ?: 'localhost';
-            $dbname = getenv('DB_NAME') ?: '';
-            $user   = getenv('DB_USER') ?: '';
-            $pass   = getenv('DB_PASS') ?: '';
-
-            $dsn = match ($driver) {
-                'sqlsrv' => "sqlsrv:Server={$host};Database={$dbname}",
-                'mysql'  => "mysql:host={$host};dbname={$dbname};charset=utf8mb4",
-                default  => "dblib:host={$host};dbname={$dbname};charset=UTF-8",
-            };
-
-            self::$conn = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
+        if (isset($GLOBALS['database']) && $GLOBALS['database'] instanceof PDO) {
+            self::$conn = $GLOBALS['database'];
+            self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            self::$conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            self::configureSessionOptions(self::$conn);
+            return self::$conn;
         }
+
+        $moduleEnv = $envPath ?? dirname(__DIR__, 2) . '/.env';
+        if (is_file($moduleEnv)) {
+            Env::load($moduleEnv);
+        }
+
+        if (Env::get('DB_HOST') === '') {
+            $candidateEnvs = [
+                dirname(__DIR__, 3) . '/pregase/includes/.env',
+                '/var/www/html/pregase/includes/.env',
+                '/mnt/servidor_sage_desarrollo/pregase/includes/.env',
+            ];
+            foreach ($candidateEnvs as $sharedEnv) {
+                if (is_file($sharedEnv)) {
+                    Env::load($sharedEnv);
+                    if (Env::get('DB_HOST') !== '') {
+                        break;
+                    }
+                }
+            }
+        }
+
+        $host = Env::get('DB_HOST', defined('HOST') ? (string)constant('HOST') : '');
+        if ($host === '') {
+            throw new RuntimeException('No se pudo inicializar la conexión a la base de datos SAGE.');
+        }
+
+        $port   = Env::get('DB_PORT', '1433');
+        $dbName = Env::get('DB_DATABASE', Env::get('DB_NAME', defined('BASE') ? (string)constant('BASE') : 'Sage_php'));
+        $user   = Env::get('DB_USERNAME', Env::get('DB_USER', defined('USUARIO') ? (string)constant('USUARIO') : 'usuarioweb'));
+        $pass   = Env::get('DB_PASSWORD', Env::get('DB_PASS', defined('PASS') ? (string)constant('PASS') : ''));
+        $driver = Env::get('DB_DRIVER', 'sqlsrv');
+
+        $dsn = self::buildDsn($driver, $host, $port, $dbName);
+
+        self::$conn = new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]);
+
+        self::configureSessionOptions(self::$conn);
+
+        return self::$conn;
     }
 
     public static function getConnection(): PDO
     {
-        if (self::$conn === null) {
-            self::init();
+        return self::$conn ?? self::init();
+    }
+
+    private static function configureSessionOptions(PDO $pdo): void
+    {
+        $pdo->exec('SET DATEFORMAT ymd');
+        $pdo->exec('SET QUOTED_IDENTIFIER ON');
+        $pdo->exec('SET ARITHABORT ON');
+        $pdo->exec('SET ANSI_NULLS ON');
+        $pdo->exec('SET CONCAT_NULL_YIELDS_NULL ON');
+        $pdo->exec('SET ANSI_WARNINGS ON');
+        $pdo->exec('SET ANSI_PADDING ON');
+    }
+
+    private static function buildDsn(string $driver, string $host, string $port, string $database): string
+    {
+        $available = PDO::getAvailableDrivers();
+
+        if (in_array('sqlsrv', $available, true) && $driver === 'sqlsrv') {
+            return "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=false;TrustServerCertificate=true";
         }
-        return self::$conn;
+
+        if (in_array('dblib', $available, true)) {
+            return "dblib:host={$host}:{$port};dbname={$database};charset=UTF-8";
+        }
+
+        if (in_array('sqlsrv', $available, true)) {
+            return "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=false;TrustServerCertificate=true";
+        }
+
+        throw new RuntimeException('No hay drivers PDO para SQL Server disponibles (sqlsrv o dblib).');
     }
 }
 ```
